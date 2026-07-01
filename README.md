@@ -72,10 +72,10 @@ print(results["auc"], results["tpr"])
 Lower-level building blocks are also exposed, e.g.:
 
 ```python
-from wst_eccentricity import compute_scattering, build_dataset, Conv1DNet, train_binary
+from wst_eccentricity import compute_scattering, build_dataset, SWT_CNN_1D_Binned, train_binary
 
 # gws: torch.Tensor of shape (N, D, T) -- N signals, D detectors, T samples
-Sx, meta = compute_scattering(gws, J=7, Q=2)
+Sx, meta = compute_scattering(gws, J=7, Q=2)   # (N, D, C, T); fed directly to SWT_CNN_1D_Binned
 ```
 
 ### No-data smoke test
@@ -126,7 +126,7 @@ the binary label is `eccentricity > e_thr` (default `e_thr = 0.01`).
 | `wst_eccentricity.io` | load waveform HDF5 files, parameter files, WST tensors |
 | `wst_eccentricity.transforms` | compute the WST (single batch or streamed to disk) |
 | `wst_eccentricity.datasets` | build labelled datasets, HDF5 cache, `Dataset` class |
-| `wst_eccentricity.models` | `Conv1DNet` reference classifier |
+| `wst_eccentricity.models` | `SWT_CNN_1D_Binned` reference classifier |
 | `wst_eccentricity.training` | training loop with early stopping |
 | `wst_eccentricity.metrics` | FPR/TPR, ROC threshold selection, AUC/AP |
 | `wst_eccentricity.pipeline` | end-to-end `run_pipeline` + classifier registry |

@@ -1,0 +1,36 @@
+# Byte-compiled / caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Model weights & data (distributed separately, e.g. Zenodo)
+*.pt
+*.pth
+*.h5
+*.hdf5
+*.npy
+*.npz
+*.pkl
+data/
+datasets/
+transform_coefficients/
+trained_nns/
+
+# Docs build
+docs/_build/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/

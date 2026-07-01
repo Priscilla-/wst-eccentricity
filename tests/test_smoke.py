@@ -8,7 +8,7 @@ import numpy as np
 import torch
 
 from wst_eccentricity import (
-    Conv1DNet,
+    SWT_CNN_1D_Binned,
     auc_ap,
     class_from_eccentricity,
     confusion_counts,
@@ -35,9 +35,10 @@ def test_flatten_and_standardize():
     assert torch.isfinite(Xs).all()
 
 
-def test_conv1dnet_forward():
-    model = Conv1DNet(input_size=64)
-    out = model(torch.randn(5, 64))
+def test_swt_cnn_1d_binned_forward():
+    # (batch, detectors, channels, time)
+    model = SWT_CNN_1D_Binned(in_channels=4, num_detectors=3, time_bins=4)
+    out = model(torch.randn(5, 3, 4, 16))
     assert out.shape == (5,)
 
 
@@ -61,13 +62,15 @@ def test_train_binary_runs():
     from torch.utils.data import DataLoader, TensorDataset
 
     torch.manual_seed(0)
+    D, C, T = 3, 4, 16
     y = torch.randint(0, 2, (120,))
-    X = torch.randn(120, 32) + y.unsqueeze(1) * 0.6
+    # (N, D, C, T) with a mild class-dependent shift so there is signal to learn.
+    X = torch.randn(120, D, C, T) + y.view(-1, 1, 1, 1) * 0.6
     ds = TensorDataset(standardize(X), y.long())
     train = DataLoader(ds, batch_size=32, shuffle=True)
     val = DataLoader(ds, batch_size=64)
 
-    model = Conv1DNet(input_size=32, num_filters=8)
+    model = SWT_CNN_1D_Binned(in_channels=C, num_detectors=D, time_bins=4)
     model, history, best_auc = train_binary(model, train, val, max_epochs=3, patience=5)
     assert len(history["train_loss"]) >= 1
     assert np.isfinite(best_auc)

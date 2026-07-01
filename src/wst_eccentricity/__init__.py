@@ -11,7 +11,7 @@ provided waveform dataset and its parameter files.
 Typical usage::
 
     from wst_eccentricity import (
-        compute_scattering, build_dataset, Conv1DNet, train_binary,
+        compute_scattering, build_dataset, SWT_CNN_1D_Binned, train_binary,
     )
 
 See the ``examples/`` directory for an end-to-end script.
@@ -41,7 +41,7 @@ from .metrics import (
     fpr_tpr_from_counts,
     threshold_for_target_fpr,
 )
-from .models import Conv1DNet
+from .models import SWT_CNN_1D_Binned
 from .pipeline import CLASSIFIERS, register_classifier, run_pipeline
 from .training import train_binary
 from .transforms import compute_scattering, scatter_in_batches
@@ -68,7 +68,7 @@ __all__ = [
     "load_scattering_hdf5",
     "H5ScatteringDataset",
     # models / training
-    "Conv1DNet",
+    "SWT_CNN_1D_Binned",
     "train_binary",
     # end-to-end pipeline
     "run_pipeline",

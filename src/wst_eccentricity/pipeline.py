@@ -33,7 +33,7 @@ import os
 
 import numpy as np
 
-from .datasets import build_dataset, flatten_features, standardize
+from .datasets import build_dataset, standardize
 from .io import load_hdf5_data
 from .metrics import (
     auc_ap,
@@ -78,13 +78,24 @@ def _train_cnn1d(
     epochs: int = 50, batch_size: int = 64, lr: float = 1e-3, patience: int = 5,
     **model_kwargs,
 ):
-    """The paper's reference 1D-CNN (:class:`~wst_eccentricity.models.Conv1DNet`)."""
+    """The paper's reference 1D-CNN (:class:`~wst_eccentricity.models.SWT_CNN_1D_Binned`).
+
+    Expects the native 4D scattering tensor ``(N, D, C, T)`` -- detectors,
+    scattering channels and time are kept separate (no flattening).
+    """
     import torch
     from torch.utils.data import DataLoader, TensorDataset
 
     from .metrics import collect_probs_targets
-    from .models import Conv1DNet
+    from .models import SWT_CNN_1D_Binned
     from .training import train_binary
+
+    if X_train.dim() != 4:
+        raise ValueError(
+            "cnn1d expects features of shape (N, D, C, T); got "
+            f"{tuple(X_train.shape)}. Do not flatten the scattering tensor for "
+            "this classifier."
+        )
 
     train_loader = DataLoader(TensorDataset(X_train, y_train), batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(TensorDataset(X_val, y_val), batch_size=256)
@@ -92,9 +103,13 @@ def _train_cnn1d(
         TensorDataset(X_test, torch.zeros(len(X_test), dtype=torch.long)), batch_size=256
     )
 
-    allowed = {"in_channels", "num_filters", "kernel_size", "num_conv_layers", "dropout"}
-    model = Conv1DNet(
-        input_size=X_train.shape[1],
+    # Detector count and scattering-channel count are read from the data; any of
+    # the remaining architecture hyper-parameters may be overridden via kwargs.
+    _, n_detectors, n_channels, _ = X_train.shape
+    allowed = {"dropout_rate", "cnn_channels", "kernel_sizes", "time_bins"}
+    model = SWT_CNN_1D_Binned(
+        in_channels=n_channels,
+        num_detectors=n_detectors,
         **{k: v for k, v in model_kwargs.items() if k in allowed},
     )
     model, _history, _auc = train_binary(
@@ -108,13 +123,20 @@ def _train_cnn1d(
 
 @register_classifier("logreg")
 def _train_logreg(X_train, y_train, X_val, y_val, X_test, device, max_iter: int = 1000, **_):
-    """A simple logistic-regression baseline (scikit-learn)."""
+    """A simple logistic-regression baseline (scikit-learn).
+
+    Flattens the ``(N, D, C, T)`` scattering tensor to ``(N, D * C * T)``
+    internally, so it receives the same features whatever their original shape.
+    """
     from sklearn.linear_model import LogisticRegression
 
+    def flat(t):
+        return t.reshape(t.shape[0], -1).numpy()
+
     clf = LogisticRegression(max_iter=max_iter)
-    clf.fit(X_train.numpy(), y_train.numpy())
-    val_probs = clf.predict_proba(X_val.numpy())[:, 1]
-    test_probs = clf.predict_proba(X_test.numpy())[:, 1]
+    clf.fit(flat(X_train), y_train.numpy())
+    val_probs = clf.predict_proba(flat(X_val))[:, 1]
+    test_probs = clf.predict_proba(flat(X_test))[:, 1]
     return val_probs, test_probs
 
 
@@ -216,7 +238,10 @@ def run_pipeline(
     # 2. Build labelled dataset and split.
     print("[2/3] Building labelled dataset ...")
     Sx, y, _params = build_dataset(params_dir, wst_dir, J, Q, e_thr=e_thr)
-    X = standardize(flatten_features(Sx))
+    # Keep the native (N, D, C, T) shape: the reference CNN consumes it directly,
+    # and the logreg baseline flattens it internally. Standardisation is applied
+    # per feature across the batch axis regardless of rank.
+    X = standardize(Sx)
     tr, va, te = _stratified_split(y, val_frac, test_frac, seed)
 
     import torch

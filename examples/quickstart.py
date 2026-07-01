@@ -11,8 +11,8 @@ Two modes:
           parameters/   # params_*.txt per signal
 
   The script computes the WST, builds a labelled dataset, trains a
-  :class:`~wst_eccentricity.models.Conv1DNet`, and reports AUC and the true
-  positive rate at a 10% false positive rate.
+  :class:`~wst_eccentricity.models.SWT_CNN_1D_Binned`, and reports AUC and the
+  true positive rate at a 10% false positive rate.
 
 Examples
 --------
@@ -31,12 +31,11 @@ from sklearn.metrics import roc_curve
 from torch.utils.data import DataLoader, TensorDataset, random_split
 
 from wst_eccentricity import (
-    Conv1DNet,
+    SWT_CNN_1D_Binned,
     auc_ap,
     build_dataset,
     collect_probs_targets,
     compute_scattering,
-    flatten_features,
     fpr_tpr_from_counts,
     standardize,
     threshold_for_target_fpr,
@@ -47,11 +46,12 @@ from wst_eccentricity.metrics import confusion_counts
 def load_features(args):
     """Return ``(features, labels)`` either from a real dataset or synthetically."""
     if args.demo:
-        # Synthetic: two Gaussian blobs so the classifier has something to learn.
+        # Synthetic 4D scattering-like tensor (N, D, C, T) with a mild
+        # class-dependent shift so the classifier has something to learn.
         torch.manual_seed(0)
-        n, feat = 400, 256
+        n, D, C, T = 400, 3, 8, 32
         y = torch.randint(0, 2, (n,))
-        X = torch.randn(n, feat) + y.unsqueeze(1) * 0.5
+        X = torch.randn(n, D, C, T) + y.view(-1, 1, 1, 1) * 0.5
         return X, y.long()
 
     # Real data: waveforms -> WST -> labelled dataset.
@@ -69,7 +69,8 @@ def load_features(args):
         Q=args.Q,
         e_thr=args.e_thr,
     )
-    return flatten_features(Sx), y
+    # Keep the native (N, D, C, T) shape for the CNN (no flattening).
+    return Sx, y
 
 
 def main():
@@ -114,7 +115,7 @@ def main():
 
     from wst_eccentricity import train_binary
 
-    model = Conv1DNet(input_size=X.shape[1])
+    model = SWT_CNN_1D_Binned(in_channels=X.shape[2], num_detectors=X.shape[1])
     model, _history, best_val_auc = train_binary(
         model, train_loader, val_loader,
         max_epochs=args.epochs, device=args.device,
