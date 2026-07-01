@@ -1,0 +1,57 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite both the software and the accompanying paper."
+title: "wst-eccentricity: rapid classification of eccentric binaries with the wavelet scattering transform"
+type: software
+version: 0.1.0
+license: MIT
+repository-code: "https://github.com/Priscilla-/wst-eccentricity"
+authors:
+  - family-names: Canizares
+    given-names: Priscilla
+    email: pc464@cam.ac.uk
+    affiliation: "Department of Applied Mathematics and Theoretical Physics, University of Cambridge"
+    orcid: "https://orcid.org/0000-0002-4361-3363"
+  - family-names: Staelens
+    given-names: Seppe J.
+    affiliation: "Department of Applied Mathematics and Theoretical Physics, University of Cambridge"
+    orcid: "https://orcid.org/0000-0002-1262-1600"
+  - family-names: Romero-Shaw
+    given-names: Isobel
+    affiliation: "Department of Applied Mathematics and Theoretical Physics, University of Cambridge"
+    orcid: "https://orcid.org/0000-0002-4181-8090"
+references:
+  - type: data
+    title: "The Shape of Eccentricity: example dataset for the code pipeline"
+    authors:
+      - family-names: Canizares
+        given-names: Priscilla
+      - family-names: Staelens
+        given-names: Seppe J.
+      - family-names: Romero-Shaw
+        given-names: Isobel
+    doi: "10.5281/zenodo.21108640"
+    year: 2026
+    publisher:
+      name: Zenodo
+    license: CC-BY-4.0
+keywords:
+  - gravitational waves
+  - eccentricity
+  - wavelet scattering transform
+  - machine learning
+  - compact binaries
+preferred-citation:
+  type: article
+  title: "The Shape of Eccentricity: Rapid Classification of Eccentric Binaries with the Wavelet Scattering Transform"
+  authors:
+    - family-names: Canizares
+      given-names: Priscilla
+      affiliation: "Department of Applied Mathematics and Theoretical Physics, University of Cambridge"
+    - family-names: Staelens
+      given-names: Seppe J.
+      affiliation: "Department of Applied Mathematics and Theoretical Physics, University of Cambridge"
+    - family-names: Romero-Shaw
+      given-names: Isobel
+      affiliation: "Department of Applied Mathematics and Theoretical Physics, University of Cambridge"
+  journal: "Physical Review D"
+  year: 2026

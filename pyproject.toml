@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wst-eccentricity"
+version = "0.1.0"
+description = "Rapid classification of eccentric compact binaries with the wavelet scattering transform"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Priscilla Canizares", email = "pc464@cam.ac.uk" },
+    { name = "Seppe J. Staelens" },
+    { name = "Isobel Romero-Shaw" },
+]
+maintainers = [
+    { name = "Priscilla Canizares", email = "pc464@cam.ac.uk" },
+]
+keywords = [
+    "gravitational waves",
+    "eccentricity",
+    "wavelet scattering transform",
+    "machine learning",
+    "compact binaries",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy>=1.23",
+    "scipy>=1.9",
+    "torch>=2.0",
+    "kymatio>=0.3",
+    "scikit-learn>=1.2",
+    "h5py>=3.7",
+]
+
+[project.optional-dependencies]
+plots = ["matplotlib>=3.6"]
+docs = [
+    "sphinx>=7.0",
+    "furo",
+    "myst-parser",
+    "sphinx-autodoc-typehints",
+]
+dev = [
+    "pytest>=7.0",
+    "wst-eccentricity[plots,docs]",
+]
+
+[project.scripts]
+wst-eccentricity-run = "wst_eccentricity.pipeline:main"
+wst-eccentricity-download = "wst_eccentricity.data:main"
+
+[project.urls]
+Homepage = "https://github.com/Priscilla-/wst-eccentricity"
+Repository = "https://github.com/Priscilla-/wst-eccentricity"
+Documentation = "https://wst-eccentricity.readthedocs.io"
+Dataset = "https://doi.org/10.5281/zenodo.21108640"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+wst_eccentricity = ["py.typed"]
