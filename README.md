@@ -152,4 +152,4 @@ Released under the [MIT License](LICENSE).
 ## Authors
 
 Priscilla Canizares, Seppe J. Staelens, and Isobel Romero-Shaw.
-Department of Applied Mathematics and Theoretical Physics, University of Cambridge.
+
