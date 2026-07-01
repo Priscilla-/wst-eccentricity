@@ -208,7 +208,7 @@ def run_pipeline(
         Random seed for the stratified split.
     **classifier_kwargs:
         Extra keyword arguments forwarded to the chosen classifier (e.g.
-        ``epochs``, ``num_filters`` for ``cnn1d``).
+        ``epochs``, ``time_bins`` for ``cnn1d``).
 
     Returns
     -------
