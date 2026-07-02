@@ -13,11 +13,13 @@ authors:
     orcid: "https://orcid.org/0000-0002-4361-3363"
   - family-names: Staelens
     given-names: Seppe J.
-    affiliation: "Department of Applied Mathematics and Theoretical Physics, University of Cambridge"
+    affiliation: 
+      - "Department of Applied Mathematics and Theoretical Physics, University of Cambridge"
+      - "Leuven Gravity Institute, KU Leuven"
     orcid: "https://orcid.org/0000-0002-1262-1600"
   - family-names: Romero-Shaw
     given-names: Isobel
-    affiliation: "Department of Applied Mathematics and Theoretical Physics, University of Cambridge"
+    affiliation: "Gravity Exploration Institute, School of Physics and Astronomy, Cardiff University"
     orcid: "https://orcid.org/0000-0002-4181-8090"
 references:
   - type: data
@@ -49,9 +51,11 @@ preferred-citation:
       affiliation: "Department of Applied Mathematics and Theoretical Physics, University of Cambridge"
     - family-names: Staelens
       given-names: Seppe J.
-      affiliation: "Department of Applied Mathematics and Theoretical Physics, University of Cambridge"
+      affiliation: 
+        - "Department of Applied Mathematics and Theoretical Physics, University of Cambridge"
+        - "Leuven Gravity Institute, KU Leuven"
     - family-names: Romero-Shaw
       given-names: Isobel
-      affiliation: "Department of Applied Mathematics and Theoretical Physics, University of Cambridge"
+      affiliation: "Gravity Exploration Institute, School of Physics and Astronomy, Cardiff University"
   journal: "Physical Review D"
   year: 2026
