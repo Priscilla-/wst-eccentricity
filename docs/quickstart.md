@@ -5,13 +5,13 @@ The pipeline is two commands: **download**, then **run**.
 ## Step 1 — download the example dataset
 
 Published on Zenodo (DOI
-[10.5281/zenodo.21108640](https://doi.org/10.5281/zenodo.21108640), CC-BY-4.0):
+[10.5281/zenodo.21204498](https://doi.org/10.5281/zenodo.21204498), CC-BY-4.0):
 
 ```bash
 wst-eccentricity-download --dest data
 ```
 
-This downloads `data_2026-04-27.zip`, verifies its checksum, and extracts the
+This downloads the dataset archive published on the record, verifies its checksum, and extracts the
 `waveforms/` and `parameters/` folders into `data/`.
 
 ## Step 2 — run WST + classifier

@@ -33,7 +33,12 @@ from .datasets import (
     save_scattering_hdf5,
     standardize,
 )
-from .io import load_hdf5_data, load_scattering_data, read_parameters
+from .io import (
+    load_hdf5_data,
+    load_scattering_data,
+    match_waveform_and_parameter_files,
+    read_parameters,
+)
 from .metrics import (
     auc_ap,
     collect_probs_targets,
@@ -57,6 +62,7 @@ __all__ = [
     "load_hdf5_data",
     "read_parameters",
     "load_scattering_data",
+    "match_waveform_and_parameter_files",
     # datasets
     "build_dataset",
     "load_scattering_batches",

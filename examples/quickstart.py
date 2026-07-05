@@ -54,20 +54,33 @@ def load_features(args):
         X = torch.randn(n, D, C, T) + y.view(-1, 1, 1, 1) * 0.5
         return X, y.long()
 
-    # Real data: waveforms -> WST -> labelled dataset.
-    from wst_eccentricity import load_hdf5_data
+    # Real data: waveforms -> WST -> labelled dataset. Waveform and parameter
+    # files are paired by their s<seed>_<index> tag so features and labels
+    # are guaranteed to stay aligned.
+    import os
 
-    gws, _ = load_hdf5_data(f"{args.data_dir}/waveforms")
+    from wst_eccentricity import (
+        load_hdf5_data,
+        match_waveform_and_parameter_files,
+        scatter_in_batches,
+    )
+
+    wf_files, pf_files = match_waveform_and_parameter_files(
+        f"{args.data_dir}/waveforms", f"{args.data_dir}/parameters"
+    )
+    gws, _ = load_hdf5_data(files=wf_files)
     scatter_dir = f"{args.data_dir}/transform_coefficients"
-    from wst_eccentricity import scatter_in_batches
-
-    scatter_in_batches(gws, args.J, args.Q, out_dir=scatter_dir, device=args.device)
+    scatter_in_batches(
+        gws, args.J, args.Q, out_dir=scatter_dir, device=args.device,
+        names=[os.path.basename(f) for f in wf_files],
+    )
     Sx, y, _params = build_dataset(
-        params_dir=f"{args.data_dir}/parameters",
+        params_dir=None,
         wst_dir=scatter_dir,
         J=args.J,
         Q=args.Q,
         e_thr=args.e_thr,
+        param_files=pf_files,
     )
     # Keep the native (N, D, C, T) shape for the CNN (no flattening).
     return Sx, y

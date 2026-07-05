@@ -58,6 +58,45 @@ def test_metrics_and_threshold():
     assert 0.0 <= f <= 1.0 and 0.0 <= t <= 1.0
 
 
+def test_match_waveform_and_parameter_files(tmp_path):
+    import pytest
+
+    from wst_eccentricity import match_waveform_and_parameter_files, read_parameters
+
+    wdir = tmp_path / "waveforms"
+    pdir = tmp_path / "parameters"
+    wdir.mkdir()
+    pdir.mkdir()
+    for i in (0, 2, 10):
+        (wdir / f"waveform_s42_{i}_0.1_30.0_20.0_50.hdf5").touch()
+        (pdir / f"params_s42_{i}.txt").write_text(f"eccentricity: 0.{i}\nNSNR: 50\n")
+
+    wf, pf = match_waveform_and_parameter_files(str(wdir), str(pdir))
+    assert len(wf) == len(pf) == 3
+    # Sorted numerically by (seed, index), not alphabetically.
+    assert [p.split("_")[-1] for p in pf] == ["0.txt", "2.txt", "10.txt"]
+
+    records = read_parameters(files=pf)
+    assert [r["eccentricity"] for r in records] == [0.0, 0.2, 0.10]
+
+    # A parameter file without a waveform must raise in strict mode ...
+    (pdir / "params_s42_99.txt").write_text("eccentricity: 0.3\n")
+    with pytest.raises(ValueError):
+        match_waveform_and_parameter_files(str(wdir), str(pdir))
+    # ... and be dropped when strict=False.
+    wf, pf = match_waveform_and_parameter_files(str(wdir), str(pdir), strict=False)
+    assert len(wf) == len(pf) == 3
+
+
+def test_read_parameters_skips_non_numeric(tmp_path):
+    from wst_eccentricity import read_parameters
+
+    f = tmp_path / "params_s1_0.txt"
+    f.write_text("eccentricity: 0.05\napproximant: SEOBNRv5EHM\nNSNR: 20\n")
+    (record,) = read_parameters(files=[str(f)])
+    assert record == {"eccentricity": 0.05, "NSNR": 20.0}
+
+
 def test_train_binary_runs():
     from torch.utils.data import DataLoader, TensorDataset
 

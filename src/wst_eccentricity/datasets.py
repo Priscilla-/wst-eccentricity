@@ -85,26 +85,37 @@ def class_from_eccentricity(
 
 
 def labels_from_params(
-    params_dir: str, param_keys: tuple[str, ...] = ("eccentricity",)
+    params_dir: str | None = None,
+    param_keys: tuple[str, ...] = ("eccentricity",),
+    files: list[str] | None = None,
 ) -> torch.Tensor:
     """Read selected parameters from a folder into a ``(N, len(param_keys))`` tensor.
 
     Parameters
     ----------
     params_dir:
-        Folder containing the ``params_*.txt`` files.
+        Folder containing the ``params_*.txt`` files (ignored if ``files`` is
+        given).
     param_keys:
         Which parameters to extract, in column order.
+    files:
+        Explicit, ordered list of parameter files (e.g. from
+        :func:`wst_eccentricity.io.match_waveform_and_parameter_files`).
 
     Returns
     -------
     torch.Tensor
         Float tensor of shape ``(n_signals, len(param_keys))``.
     """
-    records = read_parameters(params_dir)
+    records = read_parameters(params_dir, files=files)
     out = torch.zeros(len(records), len(param_keys))
     for i, record in enumerate(records):
         for j, key in enumerate(param_keys):
+            if key not in record:
+                raise KeyError(
+                    f"Parameter {key!r} missing from parameter file #{i} "
+                    f"(available keys: {sorted(record)})"
+                )
             out[i, j] = record[key]
     return out
 
@@ -154,12 +165,13 @@ def load_scattering_batches(
 
 
 def build_dataset(
-    params_dir: str,
+    params_dir: str | None,
     wst_dir: str,
     J: int,
     Q: int,
     e_thr: float = 0.01,
     param_keys: tuple[str, ...] = ("eccentricity",),
+    param_files: list[str] | None = None,
 ):
     """Assemble a labelled dataset for a single ``(J, Q)`` scattering setting.
 
@@ -176,6 +188,11 @@ def build_dataset(
     param_keys:
         Physical parameters to return alongside the features (the first key
         must be ``"eccentricity"`` so labels can be derived from it).
+    param_files:
+        Explicit, ordered list of parameter files matching the order in which
+        the waveforms were scattered (e.g. from
+        :func:`wst_eccentricity.io.match_waveform_and_parameter_files`).
+        Recommended: guarantees feature/label alignment.
 
     Returns
     -------
@@ -189,7 +206,7 @@ def build_dataset(
     if param_keys[0] != "eccentricity":
         raise ValueError("The first entry of param_keys must be 'eccentricity'.")
 
-    params = labels_from_params(params_dir, param_keys=param_keys)
+    params = labels_from_params(params_dir, param_keys=param_keys, files=param_files)
     n = params.shape[0]
     Sx = load_scattering_batches(wst_dir, J, Q, n_expected=n)
     y = class_from_eccentricity(params[:, 0], e_thr=e_thr)

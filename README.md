@@ -1,6 +1,6 @@
 # wst-eccentricity
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21108640.svg)](https://doi.org/10.5281/zenodo.21108640)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21204498.svg)](https://doi.org/10.5281/zenodo.21204498)
 
 **Rapid classification of eccentric compact binaries with the wavelet scattering transform (WST).**
 
@@ -34,16 +34,17 @@ scikit-learn and h5py.
 The whole pipeline is two commands.
 
 **Step 1 — download the example dataset** (Zenodo DOI
-[10.5281/zenodo.21108640](https://doi.org/10.5281/zenodo.21108640), CC-BY-4.0,
-~116 MB) into a folder of your choice:
+[10.5281/zenodo.21204498](https://doi.org/10.5281/zenodo.21204498), CC-BY-4.0)
+into a folder of your choice:
 
 ```bash
 wst-eccentricity-download --dest data
 # or: python -m wst_eccentricity.data --dest data
 ```
 
-This fetches `data_2026-04-27.zip`, verifies its MD5 checksum, and extracts the
-`waveforms/` and `parameters/` folders into `data/`.
+This fetches the dataset archive published on the record (its name and MD5
+checksum are looked up from the Zenodo API), verifies the checksum, and
+extracts the `waveforms/` and `parameters/` folders into `data/`.
 
 **Step 2 — run the WST and the classifier of your choice:**
 
@@ -136,7 +137,7 @@ the binary label is `eccentricity > e_thr` (default `e_thr = 0.01`).
 
 The waveform datasets and trained network weights are **not** stored in this
 repository. The example dataset is archived on Zenodo
-([10.5281/zenodo.21108640](https://doi.org/10.5281/zenodo.21108640)) and can be
+([10.5281/zenodo.21204498](https://doi.org/10.5281/zenodo.21204498)) and can be
 fetched with `python -m wst_eccentricity.data` (see
 [Example dataset](#example-dataset) above).
 

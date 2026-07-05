@@ -33,8 +33,8 @@ import os
 
 import numpy as np
 
-from .datasets import build_dataset, standardize
-from .io import load_hdf5_data
+from .datasets import _sort_batch_files, build_dataset, standardize
+from .io import load_hdf5_data, match_waveform_and_parameter_files
 from .metrics import (
     auc_ap,
     confusion_counts,
@@ -151,6 +151,32 @@ def _resolve_device(device: str | None) -> str:
         return "cpu"
 
 
+def _cached_wst_is_current(wst_dir: str, J: int, Q: int, expected_names: list[str]) -> bool | None:
+    """Check whether cached ``WST_{J}_{Q}_*.pt`` files match the current waveforms.
+
+    Compares the waveform base names stored in each batch's ``config["files"]``
+    (written by :func:`~wst_eccentricity.transforms.scatter_in_batches`) with
+    ``expected_names``.
+
+    Returns
+    -------
+    bool or None
+        ``True`` if the stored names match, ``False`` if they differ, and
+        ``None`` when the cache predates name tracking (no ``"files"`` entry),
+        in which case only the signal count can be checked downstream.
+    """
+    import torch
+
+    stored: list[str] = []
+    for path in _sort_batch_files(glob.glob(os.path.join(wst_dir, f"WST_{J}_{Q}_*.pt"))):
+        config = torch.load(path, map_location="cpu", weights_only=False).get("config", {})
+        names = config.get("files")
+        if names is None:
+            return None
+        stored.extend(names)
+    return stored == expected_names
+
+
 def _stratified_split(y, val_frac: float, test_frac: float, seed: int):
     """Return ``(train_idx, val_idx, test_idx)`` with class-stratified sampling."""
     from sklearn.model_selection import train_test_split
@@ -226,18 +252,48 @@ def run_pipeline(
     params_dir = os.path.join(data_dir, "parameters")
     wst_dir = os.path.join(data_dir, "transform_coefficients")
 
+    # 0. Pair waveform and parameter files by their s<seed>_<index> tag so
+    #    features and labels are guaranteed to stay aligned.
+    wf_files, pf_files = match_waveform_and_parameter_files(waveforms_dir, params_dir)
+    wf_names = [os.path.basename(f) for f in wf_files]
+    print(f"[0/3] Matched {len(wf_files)} waveform/parameter pairs.")
+
     # 1. Wavelet scattering transform (cached).
     cached = glob.glob(os.path.join(wst_dir, f"WST_{J}_{Q}_*.pt"))
-    if recompute_wst or not cached:
+    use_cache = bool(cached) and not recompute_wst
+    if use_cache:
+        current = _cached_wst_is_current(wst_dir, J, Q, wf_names)
+        if current is False:
+            print("[1/3] Cached WST does not match the current waveform files; recomputing ...")
+            use_cache = False
+        elif current is None:
+            print("[1/3] Note: cached WST has no file manifest; only the signal "
+                  "count will be checked. Use --recompute-wst if the dataset changed.")
+    if not use_cache:
         print(f"[1/3] Computing WST (J={J}, Q={Q}) on {device} ...")
-        gws, _ = load_hdf5_data(waveforms_dir)
-        scatter_in_batches(gws, J, Q, out_dir=wst_dir, device=device)
+        gws, _ = load_hdf5_data(files=wf_files)
+        scatter_in_batches(gws, J, Q, out_dir=wst_dir, device=device, names=wf_names)
     else:
         print(f"[1/3] Using cached WST in {wst_dir}")
 
     # 2. Build labelled dataset and split.
     print("[2/3] Building labelled dataset ...")
-    Sx, y, _params = build_dataset(params_dir, wst_dir, J, Q, e_thr=e_thr)
+    Sx, y, _params = build_dataset(
+        params_dir, wst_dir, J, Q, e_thr=e_thr, param_files=pf_files
+    )
+    n_pos = int(y.sum())
+    n_neg = int(len(y) - n_pos)
+    print(f"    labels (e_thr={e_thr}): {n_pos} eccentric / {n_neg} quasi-circular")
+    if min(n_pos, n_neg) == 0:
+        raise ValueError(
+            f"All {len(y)} signals fall in a single class at e_thr={e_thr} "
+            f"({n_pos} eccentric, {n_neg} quasi-circular): a classifier cannot "
+            "be trained or evaluated. Check the dataset's eccentricity "
+            "distribution or adjust --e-thr."
+        )
+    if min(n_pos, n_neg) < 10:
+        print(f"    warning: only {min(n_pos, n_neg)} signals in the minority "
+              "class; validation/test metrics will be noisy.")
     # Keep the native (N, D, C, T) shape: the reference CNN consumes it directly,
     # and the logreg baseline flattens it internally. Standardisation is applied
     # per feature across the batch axis regardless of rank.

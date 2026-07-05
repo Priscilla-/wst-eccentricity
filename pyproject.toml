@@ -62,7 +62,7 @@ wst-eccentricity-download = "wst_eccentricity.data:main"
 Homepage = "https://github.com/Priscilla-/wst-eccentricity"
 Repository = "https://github.com/Priscilla-/wst-eccentricity"
 Documentation = "https://wst-eccentricity.readthedocs.io"
-Dataset = "https://doi.org/10.5281/zenodo.21108640"
+Dataset = "https://doi.org/10.5281/zenodo.21204498"
 
 [tool.setuptools.packages.find]
 where = ["src"]

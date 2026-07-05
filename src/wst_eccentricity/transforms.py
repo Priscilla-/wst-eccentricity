@@ -85,6 +85,7 @@ def scatter_in_batches(
     out_dir: str,
     batch_size: int = 10_000,
     device: str = "cpu",
+    names: list[str] | None = None,
 ) -> list[str]:
     """Scatter a large set of signals in batches and save the results to disk.
 
@@ -105,6 +106,11 @@ def scatter_in_batches(
         Number of signals processed per batch.
     device:
         Device on which to run the transform.
+    names:
+        Optional list of ``len(gws)`` identifiers (e.g. waveform file base
+        names), stored in each batch's ``config["files"]``. This lets
+        consumers (e.g. :func:`wst_eccentricity.pipeline.run_pipeline`) verify
+        that a cached transform still corresponds to the current dataset.
 
     Returns
     -------
@@ -113,13 +119,18 @@ def scatter_in_batches(
     """
     os.makedirs(out_dir, exist_ok=True)
     n = gws.shape[0]
+    if names is not None and len(names) != n:
+        raise ValueError(f"len(names)={len(names)} does not match len(gws)={n}")
     n_batches = (n + batch_size - 1) // batch_size
     written: list[str] = []
 
     for b in range(n_batches):
-        chunk = gws[b * batch_size : (b + 1) * batch_size]
+        lo, hi = b * batch_size, min((b + 1) * batch_size, n)
+        chunk = gws[lo:hi]
         Sx, meta = compute_scattering(chunk, J, Q, device=device)
         cfg = {"J": J, "Q": Q, "T": gws.shape[2], "average": True, "batch": b + 1}
+        if names is not None:
+            cfg["files"] = list(names[lo:hi])
         path = os.path.join(out_dir, f"WST_{J}_{Q}_{b + 1}.pt")
         torch.save({"Sx": Sx.cpu(), "config": cfg, "meta": meta}, path)
         written.append(path)
