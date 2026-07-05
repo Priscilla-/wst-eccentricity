@@ -17,6 +17,12 @@ pipeline that:
 > starts from a **pre-generated waveform dataset and its parameter files**
 > (see [Data layout](#data-layout)). Trained weights and datasets are
 > distributed separately (see [Data & weights](#data--weights)).
+>
+
+## Authors
+
+Priscilla Canizares, Seppe J. Staelens, and Isobel Romero-Shaw.
+
 
 ## Installation
 
@@ -150,7 +156,4 @@ If you use this code, please cite the paper and the software (see
 
 Released under the [MIT License](LICENSE).
 
-## Authors
-
-Priscilla Canizares, Seppe J. Staelens, and Isobel Romero-Shaw.
 
